@@ -1,5 +1,23 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+
+// function for IPC invoke test. Pattern-1
+function handleSetTitle(event, title) {
+  const webContents = event.sender;
+  const win = BrowserWindow.fromWebContents(webContents);
+
+  if (title === "quit" || title === "exit") {
+    win.close();
+  }
+
+  if (title === "appQuit") {
+    if (app) {
+      app.quit();
+    }
+  }
+
+  win.setTitle(title);
+}
 
 // modify createWidow() function
 const createWindow = () => {
@@ -13,8 +31,7 @@ const createWindow = () => {
 
   win.loadFile("index.html");
 
-  const contents = win.webContents;
-  console.log(contents);
+  ipcMain.on("set-title", handleSetTitle);
 };
 
 app.whenReady().then(() => {
