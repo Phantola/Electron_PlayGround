@@ -19,6 +19,21 @@ function handleSetTitle(event, title) {
   win.setTitle(title);
 }
 
+// function for IPC invoke test Patter-2 (two-way)
+async function handleFileOpen() {
+
+	const { canceled, filePaths }  = await dialog.showOpenDialog()
+	if(calceled) {
+		
+		return
+	
+	} else {
+
+		return filePaths[0]
+	}
+
+}
+
 // modify createWidow() function
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -32,6 +47,7 @@ const createWindow = () => {
   win.loadFile("index.html");
 
   ipcMain.on("set-title", handleSetTitle);
+	icpMain.on("dialog:openFile", handleFileOpen)
 };
 
 app.whenReady().then(() => {
