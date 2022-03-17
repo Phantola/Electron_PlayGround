@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 
 // function for IPC invoke test. Pattern-1
@@ -21,17 +21,12 @@ function handleSetTitle(event, title) {
 
 // function for IPC invoke test Patter-2 (two-way)
 async function handleFileOpen() {
-
-	const { canceled, filePaths }  = await dialog.showOpenDialog()
-	if(calceled) {
-		
-		return
-	
-	} else {
-
-		return filePaths[0]
-	}
-
+  const { canceled, filePaths } = await dialog.showOpenDialog();
+  if (canceled) {
+    return;
+  } else {
+    return filePaths[0];
+  }
 }
 
 // modify createWidow() function
@@ -45,9 +40,13 @@ const createWindow = () => {
   });
 
   win.loadFile("index.html");
+  win.webContents.openDevTools();
 
+  // if listen ipc message 1-way pattern
   ipcMain.on("set-title", handleSetTitle);
-	icpMain.on("dialog:openFile", handleFileOpen)
+
+  // if listen ipc message 2-way pattern
+  ipcMain.handle("dialog:openFile", handleFileOpen);
 };
 
 app.whenReady().then(() => {

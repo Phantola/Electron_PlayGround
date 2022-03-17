@@ -6,11 +6,10 @@ setTitleButton.addEventListener("click", () => {
   window.electronAPI.setTitle(title);
 });
 
-const fileBtn = document.getElementById('file-btn')
-const filePathElement = document.getElementById('filePath');
+const fileBtn = document.getElementById("file-btn");
+const filePathElement = document.getElementById("filePath");
 
-fileBtn.addEventListener('click', async () => {
-
-	const filePath = await window.electronAPI.openFile();
-	filePathElement.innerText = filePath
+fileBtn.addEventListener("click", async () => {
+  const filePath = await window.electronAPI.openFile();
+  filePathElement.innerText = filePath;
 });
