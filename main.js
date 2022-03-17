@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 
 // function for IPC invoke test. Pattern-1
@@ -39,14 +39,50 @@ const createWindow = () => {
     },
   });
 
+  const menu = Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+        {
+          click: () => {
+            win.webContents.send("update-counter", 1);
+          },
+          label: "Increment",
+        },
+        {
+          click: () => {
+            win.webContents.send("update-counter", -1);
+          },
+          label: "Decrement",
+        },
+        {
+          label: `${app.name} 종료`,
+          // 단축키
+          accelerator: process.platform === "darwin" ? "Cmd+Q" : "Alt+F4",
+          click: () => {
+            app.quit();
+          },
+        },
+      ],
+    },
+  ]);
+
+  Menu.setApplicationMenu(menu);
   win.loadFile("index.html");
   win.webContents.openDevTools();
 
-  // if listen ipc message 1-way pattern
+  // IPC Listen List
+  // isten ipc message 1-way pattern
   ipcMain.on("set-title", handleSetTitle);
 
-  // if listen ipc message 2-way pattern
+  // listen ipc message 2-way pattern
   ipcMain.handle("dialog:openFile", handleFileOpen);
+
+  // listen reply ipc from renderer
+  ipcMain.on("counter-value", (_event, value) => {
+    console.log(_event);
+    console.log(`webContents's counter represent ${value}`);
+  });
 };
 
 app.whenReady().then(() => {

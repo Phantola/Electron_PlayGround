@@ -13,3 +13,16 @@ fileBtn.addEventListener("click", async () => {
   const filePath = await window.electronAPI.openFile();
   filePathElement.innerText = filePath;
 });
+
+const counter = document.getElementById("counter");
+
+window.preLoadedElectronAPI.updateCounter((event, value) => {
+  console.log(event);
+  const oldValue = Number(counter.innerText);
+  const newValue = oldValue + value;
+
+  counter.innerText = newValue;
+
+  // event.sender.send instead of event.reply
+  event.sender.send("counter-value", newValue);
+});
