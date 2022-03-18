@@ -41,7 +41,7 @@ const createWindow = () => {
 
   const menu = Menu.buildFromTemplate([
     {
-      label: app.name,
+      label: (app.name).toUpperCase(),
       submenu: [
         {
           click: () => {
@@ -65,11 +65,16 @@ const createWindow = () => {
         },
       ],
     },
+    {
+      label: 'Debugger',
+      click: () => {
+        win.webContents.openDevTools();
+      }
+    }
   ]);
 
   Menu.setApplicationMenu(menu);
   win.loadFile("index.html");
-  win.webContents.openDevTools();
 
   // IPC Listen List
   // isten ipc message 1-way pattern

@@ -28,6 +28,7 @@
     "electron": "^17.1.2"
   },
   "dependencies": {
+    "axios": "^0.26.1",
     "electron-squirrel-startup": "^1.0.0"
   },
   "config": {
