@@ -1,0 +1,43 @@
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #333;
+    color: white;
+  }
+}
+input {
+  width: 150px;
+  height: 30px;
+
+  border: none;
+  border-bottom: 1px solid rgba(153, 153, 153, 0);
+  background-color: rgba(51, 51, 51, 0);
+  color: white;
+  padding-left: 14px;
+  font-size: 20px;
+}
+
+input:focus {
+  box-shadow: none;
+  outline-offset: 0px;
+  outline: none;
+  border-bottom: 1px solid white;
+}
+
+.path {
+  width: 400px;
+}
+
+#command-list {
+  margin-top: 50px;
+}
+
+#new-cmd-save {
+  margin-left: 10px;
+  background-color: #333;
+  border: 1px solid #3d8bfd;
+  border-radius: 10%;
+  color: #3d8bfd;
+  font-size: 20px;
+  padding: 5px;
+  cursor: pointer;
+}
