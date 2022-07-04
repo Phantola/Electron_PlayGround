@@ -89,6 +89,16 @@ const createWindow = () => {
             cp.exec("code ./command.json");
           },
         },
+        {
+          label: "Command Setting",
+          click: () => {
+            win.loadFile("./view/setting.html");
+            win.webPreferences.preload = path.join(
+              __dirname,
+              "./view/settingPreload.js"
+            );
+          },
+        },
       ],
     },
   ]);
@@ -207,7 +217,7 @@ function saveCommands() {
 function cmdExecute(cmdString) {
   let path = commandObj[cmdString];
   if (path != undefined) {
-    cp.execFile(path);
+    cp.exec(path);
     return;
   }
 
