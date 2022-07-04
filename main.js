@@ -19,7 +19,10 @@ let win = null; // main window
 let tray = null; //tray
 let commandPopUp = null; //commandInputPopup
 let commandPopUpIsOpened = false;
-let closeTrayFlag = true; //true, close action will be tray, false :  close action is real quit application
+
+// true : close action will be stay in tray
+// false :  close action is real quit application
+let closeTrayFlag = true;
 
 let commandObj = null; // mapped commands object
 
@@ -76,6 +79,8 @@ function createWindow() {
     },
   });
 
+  win.loadFile("./view/index.html");
+
   // 다크모드 적용
   nativeTheme.themeSource = "dark";
 
@@ -87,10 +92,12 @@ function createWindow() {
     win.show();
   });
 
+  // 최소화
   win.on("minimize", () => {
     win.hide();
   });
 
+  // 닫기버튼 (x 버튼)
   win.on("close", () => {
     if (closeTrayFlag) {
       win.hide();
@@ -98,8 +105,6 @@ function createWindow() {
       app.quit();
     }
   });
-
-  win.loadFile("./view/index.html");
 
   // IPC Message Handlers
   ipcMain.on("set-close-tray", () => {
@@ -207,8 +212,8 @@ function saveCommands() {
 
 // 명령어 실행 함수
 function cmdExecute(cmdString) {
+  // 사용자 설정 예약어
   let path = commandObj[cmdString];
-
   if (path != undefined) {
     if (path.split(".")[-1] != "exe") {
       cp.execFile(path);
@@ -216,6 +221,7 @@ function cmdExecute(cmdString) {
     }
   }
 
+  // 콜론 명령어(:)
   if (cmdString.indexOf(":") > -1) {
     cmdString = cmdString.split(":");
     switch (cmdString[0]) {
@@ -239,8 +245,8 @@ function cmdExecute(cmdString) {
     }
   }
 
+  // 일반 명령어
   cp.exec(cmdString);
-
   return;
 }
 

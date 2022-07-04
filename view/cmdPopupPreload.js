@@ -7,7 +7,6 @@ contextBridge.exposeInMainWorld("preLoadedElectronAPI", {
 
 window.addEventListener("DOMContentLoaded", () => {
   contextBridge.exposeInMainWorld("electronAPI", {
-    // cmdExecute: (cmdString) => ipcRenderer.send("cmd-execute", cmdString),
     cmdAutoRecommand: (cmdString) =>
       ipcRenderer.invoke("cmd-auto-recommand", cmdString),
   });
