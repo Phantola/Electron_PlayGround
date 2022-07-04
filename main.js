@@ -37,23 +37,18 @@ const createWindow = () => {
     height: 600,
     title: "Pandora",
     icon: "./icon.png",
+    alwaysOnTop: false,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "./view/indexPreload.js"),
     },
   });
-  win.hide();
 
   // 다크모드 적용
   nativeTheme.themeSource = "dark";
 
-  // 트레이에 생성
+  // 트레이 생성
   tray = createTray();
-
-  // 닫기 버튼 누를 시 트레이 최소화
-  win.on("close", function (e) {
-    e.preventDefault();
-    win.hide();
-  });
 
   // 최소화하고 작업표시줄에서 다시 눌렀을 때
   win.on("restore", function (e) {
@@ -62,22 +57,10 @@ const createWindow = () => {
 
   const menu = Menu.buildFromTemplate([
     {
-      label: app.name.toUpperCase(),
+      label: app.name,
       submenu: [
         {
-          click: () => {
-            win.webContents.send("update-counter", 1);
-          },
-          label: "Increment",
-        },
-        {
-          click: () => {
-            win.webContents.send("update-counter", -1);
-          },
-          label: "Decrement",
-        },
-        {
-          label: `${app.name} 종료`,
+          label: `${app.name} 완전 종료`,
           // 단축키
           accelerator: process.platform === "darwin" ? "Cmd+Q" : "Alt+F4",
           click: () => {
@@ -87,58 +70,61 @@ const createWindow = () => {
       ],
     },
     {
-      label: "Debugger",
-      click: () => {
-        win.webContents.openDevTools();
-      },
+      label: "Tool",
+      submenu: [
+        {
+          label: "Debugger",
+          click: () => {
+            win.webContents.openDevTools();
+          },
+        },
+      ],
+    },
+    {
+      label: "Settings",
+      submenu: [
+        {
+          label: "Open Command JSON File",
+          click: () => {
+            cp.exec("code ./command.json");
+          },
+        },
+      ],
     },
   ]);
 
   Menu.setApplicationMenu(menu);
   win.loadFile("./view/index.html");
 
-  // IPC Listen List
-  // isten ipc message 1-way pattern
-
+  // IPC Message Handlers
   ipcMain.handle("new-command", (e, cmd, path) => {
     return generateNewCommand(cmd, path);
   });
   ipcMain.handle("get-cmd-list", (e) => {
     return commandObj;
   });
-
-  // listen ipc message 2-way pattern
   ipcMain.handle("dialog:openFile", handleFileOpen);
-
-  // listen reply ipc from renderer
-  // ipcMain.on("counter-value", (_event, value) => {
-  //   console.log(_event);
-  //   console.log(`webContents's counter represent ${value}`);
-  // });
 };
 
 app.whenReady().then(() => {
   createWindow();
 
   // 명령어 입력 팝업 Global shortcut Register
-  const openCommandPopupShortCut = globalShortcut.register(
-    "CommandOrControl+Shift+R",
-    () => {
-      if (commandPopUp == null) {
-        commandPopUp = createCmdPopUp();
-        //commandPopUp.webContents.openDevTools();
-        commandPopUpIsOpened = true;
+  globalShortcut.register("CommandOrControl+Shift+R", () => {
+    if (commandPopUp == null) {
+      commandPopUp = createCmdPopUp();
+      //commandPopUp.webContents.openDevTools();
+      commandPopUpIsOpened = true;
+    } else {
+      if (commandPopUpIsOpened) {
+        commandPopUp.hide();
+        commandPopUpIsOpened = false;
       } else {
-        if (commandPopUpIsOpened) {
-          commandPopUp.hide();
-          commandPopUpIsOpened = false;
-        } else {
-          commandPopUp.show();
-          commandPopUpIsOpened = true;
-        }
+        commandPopUp.show();
+        commandPopUpIsOpened = true;
       }
     }
-  );
+  });
 
   // 맥에서는 창이 닫혀도 프로세스는 계속 실행되기 때문에
   // 사용가능한 창이 없을 때 앱을 활성화하면 새 창이 열리는 기능을 구현해주어야 함
@@ -169,6 +155,16 @@ function createTray() {
   appIcon.setContextMenu(contextMenu);
 }
 
+// 파일 찾기 다이얼로그 오픈
+async function handleFileOpen() {
+  const { canceled, filePaths } = await dialog.showOpenDialog();
+  if (canceled) {
+    return;
+  } else {
+    return filePaths[0];
+  }
+}
+
 // 명령어 입력 팝업 생성
 function createCmdPopUp() {
   const cmdPopUp = new BrowserWindow({
@@ -192,49 +188,37 @@ function createCmdPopUp() {
   return cmdPopUp;
 }
 
+// 새로운 명령어 등록
+function generateNewCommand(cmd, path) {
+  commandObj[cmd] = path;
+
+  if (commandObj[cmd] != undefined) {
+    saveCommands();
+    return true;
+  }
+}
+
+// 프로그램 종료 시 json 파일에 저장
+function saveCommands() {
+  fs.writeFileSync("command.json", JSON.stringify(commandObj));
+}
+
 // 명령어 실행 함수
 function cmdExecute(cmdString) {
   let path = commandObj[cmdString];
   if (path != undefined) {
     cp.execFile(path);
-  }
-}
-
-function generateNewCommand(cmd, path) {
-  commandObj[cmd] = path;
-
-  if (commandObj[cmd] != undefined) {
-    return true;
-  }
-}
-
-function saveCommands() {
-  fs.writeFileSync("command.json", JSON.stringify(commandObj));
-}
-// function for IPC invoke test. Pattern-1
-// function handleSetTitle(event, title) {
-//   const webContents = event.sender;
-//   const win = BrowserWindow.fromWebContents(webContents);
-
-//   if (title === "quit" || title === "exit") {
-//     win.close();
-//   }
-
-//   if (title === "appQuit") {
-//     if (app) {
-//       app.quit();
-//     }
-//   }
-
-//   win.setTitle(title);
-// }
-
-// function for IPC invoke test Patter-2 (two-way)
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog();
-  if (canceled) {
     return;
-  } else {
-    return filePaths[0];
   }
+
+  path = path.split(":");
+  switch (path[0]) {
+    case "text":
+    case "txt": {
+      cp.exec(`notepad ${path[1]}`);
+      break;
+    }
+  }
+
+  return;
 }

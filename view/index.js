@@ -1,8 +1,6 @@
 // Notification
 const NOTIFICATION_TITLE = "Pandora";
 const NOTIFICATION_BODY = "Pandora is Running.";
-const NOTIFICATION_CLICK_MESSAGE = "Notification clicked!";
-
 new Notification(NOTIFICATION_TITLE, { body: NOTIFICATION_BODY });
 
 // new command file find dialog
@@ -57,12 +55,14 @@ newCmdBtn.addEventListener("click", async (e) => {
   }
 });
 
+// Exist commands Rendering
 (async () => {
   let cmdList = await window.preLoadedElectronAPI.getCmdList();
+  console.log(cmdList);
 
   let commandList = document.getElementById("command-list");
 
-  if (JSON.stringify(commandList) == "{}") {
+  if (JSON.stringify(cmdList) == "{}") {
     let p = document.createElement("p");
     p.style.paddingLeft = "14px";
     p.style.color = "#8a8a8a";
