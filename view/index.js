@@ -1,24 +1,32 @@
-// Notification
-const NOTIFICATION_TITLE = "Pandora";
-const NOTIFICATION_BODY = "Pandora is Running.";
-new Notification(NOTIFICATION_TITLE, { body: NOTIFICATION_BODY });
+const title = document.getElementById("title");
+title.addEventListener("click", () => {
+  location.href = "index.html";
+});
 
 // new command file find dialog
-const filePathElement = document.getElementsByClassName("path")[0];
-
-filePathElement.addEventListener("click", async () => {
+const filePathInput = document.getElementsByClassName("path")[0];
+const fileFinderBtn = document.getElementById("path-find");
+fileFinderBtn.addEventListener("mouseenter", (e) => {
+  fileFinderBtn.style.color = "white";
+  fileFinderBtn.style.backgroundColor = "#3d8bfd";
+});
+fileFinderBtn.addEventListener("mouseleave", (e) => {
+  fileFinderBtn.style.color = "#3d8bfd";
+  fileFinderBtn.style.backgroundColor = "#333";
+});
+fileFinderBtn.addEventListener("click", async () => {
   const filePath = await window.electronAPI.openFile();
-  filePathElement.value = filePath;
+  filePathInput.value = filePath;
 });
 
 // new command save button
 const newCmdBtn = document.getElementById("new-cmd-save");
 newCmdBtn.addEventListener("mouseenter", (e) => {
   newCmdBtn.style.color = "white";
-  newCmdBtn.style.backgroundColor = "#3d8bfd";
+  newCmdBtn.style.backgroundColor = "green";
 });
 newCmdBtn.addEventListener("mouseleave", (e) => {
-  newCmdBtn.style.color = "#3d8bfd";
+  newCmdBtn.style.color = "green";
   newCmdBtn.style.backgroundColor = "#333";
 });
 newCmdBtn.addEventListener("click", async (e) => {
@@ -58,7 +66,6 @@ newCmdBtn.addEventListener("click", async (e) => {
 // Exist commands Rendering
 (async () => {
   let cmdList = await window.preLoadedElectronAPI.getCmdList();
-  console.log(cmdList);
 
   let commandList = document.getElementById("command-list");
 
@@ -73,7 +80,8 @@ newCmdBtn.addEventListener("click", async (e) => {
 
   for (let i in cmdList) {
     let p = document.createElement("p");
-    p.innerText = `${i} : ${cmdList[i]}`;
+    p.id = "cmd-item";
+    p.innerHTML = `<span class="cmd">${i}</span> : <span class="path">${cmdList[i]}</span>`;
     commandList.append(p);
   }
 })();

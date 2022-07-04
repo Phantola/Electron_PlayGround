@@ -9,6 +9,8 @@ body {
   margin: 0;
   width: 800px;
   height: 80px;
+  font-family: "Consolas";
+  overflow: hidden;
 }
 
 #cmd-box {
@@ -17,7 +19,7 @@ body {
   text-align: center;
 }
 
-input {
+#cmd {
   width: 750px;
   height: 65px;
 
@@ -27,11 +29,25 @@ input {
   color: white;
   padding-left: 14px;
   font-size: 50px;
+  font-family: "Consolas";
+
+  overflow: hidden;
 }
 
-input:focus {
+#cmd:focus {
   box-shadow: none;
   outline-offset: 0px;
   outline: none;
   border-bottom: 1px solid white;
+}
+
+#auto-complete {
+  color: gray;
+  position: absolute;
+  font-size: 50px;
+  padding: 0;
+  margin: 0;
+  padding-left: 14px;
+  top: 4px;
+  left: 17px;
 }

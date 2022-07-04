@@ -7,18 +7,21 @@ const {
   Tray,
   globalShortcut,
   nativeTheme,
+  MenuItem,
 } = require("electron");
 const path = require("path");
 const axios = require("axios");
 const fs = require("fs");
 const cp = require("child_process");
 
-// modify createWidow() function
-let tray = null;
-let win = null;
-let commandPopUp = null;
+// Global vairables
+let win = null; // main window
+let tray = null; //tray
+let commandPopUp = null; //commandInputPopup
 let commandPopUpIsOpened = false;
-let commandObj = null;
+let closeTrayFlag = true; //true, close action will be tray, false :  close action is real quit application
+
+let commandObj = null; // mapped commands object
 
 // 명령어 매핑파일 로딩 및 생성
 if (commandObj == null)
@@ -30,91 +33,6 @@ if (commandObj == null)
       commandObj = JSON.parse(fs.readFileSync("command.json").toString());
     }
   });
-
-const createWindow = () => {
-  win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    title: "Pandora",
-    icon: "./icon.png",
-    alwaysOnTop: false,
-    show: false,
-    webPreferences: {
-      preload: path.join(__dirname, "./view/indexPreload.js"),
-    },
-  });
-
-  // 다크모드 적용
-  nativeTheme.themeSource = "dark";
-
-  // 트레이 생성
-  tray = createTray();
-
-  // 최소화하고 작업표시줄에서 다시 눌렀을 때
-  win.on("restore", function (e) {
-    win.show();
-  });
-
-  const menu = Menu.buildFromTemplate([
-    {
-      label: app.name,
-      submenu: [
-        {
-          label: `${app.name} 완전 종료`,
-          // 단축키
-          accelerator: process.platform === "darwin" ? "Cmd+Q" : "Alt+F4",
-          click: () => {
-            app.quit();
-          },
-        },
-      ],
-    },
-    {
-      label: "Tool",
-      submenu: [
-        {
-          label: "Debugger",
-          click: () => {
-            win.webContents.openDevTools();
-          },
-        },
-      ],
-    },
-    {
-      label: "Settings",
-      submenu: [
-        {
-          label: "Open Command JSON File",
-          click: () => {
-            cp.exec("code ./command.json");
-          },
-        },
-        {
-          label: "Command Setting",
-          click: () => {
-            win.loadFile("./view/setting.html");
-            win.webPreferences.preload = path.join(
-              __dirname,
-              "./view/settingPreload.js"
-            );
-          },
-        },
-      ],
-    },
-  ]);
-
-  Menu.setApplicationMenu(menu);
-  win.loadFile("./view/index.html");
-
-  // IPC Message Handlers
-  ipcMain.handle("new-command", (e, cmd, path) => {
-    return generateNewCommand(cmd, path);
-  });
-  ipcMain.handle("get-cmd-list", (e) => {
-    return commandObj;
-  });
-  ipcMain.handle("dialog:openFile", handleFileOpen);
-};
 
 app.whenReady().then(() => {
   createWindow();
@@ -143,7 +61,70 @@ app.whenReady().then(() => {
   });
 });
 
-// 트레이 생성 함수
+// 메인 윈도우 생성 ==================
+function createWindow() {
+  win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    title: "Pandora",
+    icon: "./icon.png",
+    alwaysOnTop: false,
+    show: false,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, "./view/preload.js"),
+    },
+  });
+
+  // 다크모드 적용
+  nativeTheme.themeSource = "dark";
+
+  // 트레이 생성
+  tray = createTray();
+
+  // 최소화하고 작업표시줄에서 다시 눌렀을 때
+  win.on("restore", function (e) {
+    win.show();
+  });
+
+  win.on("minimize", () => {
+    win.hide();
+  });
+
+  win.on("close", () => {
+    if (closeTrayFlag) {
+      win.hide();
+    } else {
+      app.quit();
+    }
+  });
+
+  win.loadFile("./view/index.html");
+
+  // IPC Message Handlers
+  ipcMain.on("set-close-tray", () => {
+    closeTrayFlag = !closeTrayFlag;
+  });
+  ipcMain.handle("new-command", (e, cmd, path) => {
+    return generateNewCommand(cmd, path);
+  });
+  ipcMain.handle("get-cmd-list", (e) => {
+    return commandObj;
+  });
+  ipcMain.handle("dialog:openFile", handleFileOpen);
+}
+
+// 파일 찾기 다이얼로그 오픈
+async function handleFileOpen() {
+  const { canceled, filePaths } = await dialog.showOpenDialog();
+  if (canceled) {
+    return;
+  } else {
+    return filePaths[0];
+  }
+}
+
+// 트레이 생성 함수 =================
 function createTray() {
   let appIcon = new Tray("./assets/icon.png");
   const contextMenu = Menu.buildFromTemplate([
@@ -165,17 +146,7 @@ function createTray() {
   appIcon.setContextMenu(contextMenu);
 }
 
-// 파일 찾기 다이얼로그 오픈
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog();
-  if (canceled) {
-    return;
-  } else {
-    return filePaths[0];
-  }
-}
-
-// 명령어 입력 팝업 생성
+// 명령어 입력 팝업 생성 ================
 function createCmdPopUp() {
   const cmdPopUp = new BrowserWindow({
     width: 800,
@@ -188,11 +159,32 @@ function createCmdPopUp() {
     },
   });
   cmdPopUp.loadFile("./view/cmdPopup.html");
+  cmdPopUp.webContents.openDevTools();
 
+  // esc 로 입력창 닫기
+  let menu = new Menu();
+  menu.append(
+    new MenuItem({
+      accelerator: "esc",
+      acceleratorWorksWhenHidden: true,
+      click: () => {
+        cmdPopUp.hide();
+        commandPopUpIsOpened = false;
+      },
+    })
+  );
+  cmdPopUp.setMenu(menu);
+
+  // 명령 실행 핸들러
   ipcMain.on("cmd-execute", function (e, cmdString) {
     cmdExecute(cmdString);
     commandPopUp.hide();
     commandPopUpIsOpened = false;
+  });
+
+  // 명령어 자동완성 핸들러
+  ipcMain.handle("cmd-auto-recommand", (e, cmdString) => {
+    return cmdAutoRecommand(cmdString);
   });
 
   return cmdPopUp;
@@ -216,19 +208,50 @@ function saveCommands() {
 // 명령어 실행 함수
 function cmdExecute(cmdString) {
   let path = commandObj[cmdString];
-  if (path != undefined) {
-    cp.exec(path);
-    return;
-  }
 
-  path = path.split(":");
-  switch (path[0]) {
-    case "text":
-    case "txt": {
-      cp.exec(`notepad ${path[1]}`);
-      break;
+  if (path != undefined) {
+    if (path.split(".")[-1] != "exe") {
+      cp.execFile(path);
+      return;
     }
   }
 
+  if (cmdString.indexOf(":") > -1) {
+    cmdString = cmdString.split(":");
+    switch (cmdString[0]) {
+      case "text":
+      case "txt": {
+        cp.exec(`notepad ${cmdString[1]}`);
+        return;
+      }
+      case "site": {
+        cp.execFile(
+          `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`,
+          [`${cmdString[1]}`]
+        );
+        console.log(cmdString[1]);
+        return;
+      }
+      case "open": {
+        cp.exec(`explorer.exe ${cmdString[1]}`);
+        return;
+      }
+    }
+  }
+
+  cp.exec(cmdString);
+
   return;
+}
+
+// 명령어 추천 함수
+function cmdAutoRecommand(cmdString) {
+  let str = [];
+
+  let reg = new RegExp(`^${cmdString}`);
+  for (let i in commandObj) {
+    if (reg.test(i)) str.push(i);
+  }
+
+  return str.length == 0 ? "" : str.sort()[0].slice(cmdString.length);
 }

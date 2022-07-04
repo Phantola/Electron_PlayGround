@@ -1,19 +1,22 @@
+@import url("https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/nanumsquare.css");
 @media (prefers-color-scheme: dark) {
   body {
     background: #333;
     color: white;
+    font-family: "NanumSquare";
   }
 }
 input {
   width: 150px;
   height: 30px;
-
   border: none;
   border-bottom: 1px solid rgba(153, 153, 153, 0);
   background-color: rgba(51, 51, 51, 0);
   color: white;
   padding-left: 14px;
-  font-size: 20px;
+
+  font-family: "Consolas";
+  font-size: 16px;
 }
 
 input:focus {
@@ -23,21 +26,72 @@ input:focus {
   border-bottom: 1px solid white;
 }
 
-.path {
+#new-cmd {
+  color: salmon;
+}
+
+#new-path {
   width: 400px;
+  color: #727b9e;
+}
+
+.btn {
+  margin-left: 10px;
+  background-color: #333;
+  border-radius: 5px;
+  font-size: 20px;
+  width: 60px;
+  height: 30px;
+  cursor: pointer;
+  line-height: 27px;
+  font-weight: bold;
+  font-family: "Consolas";
+}
+
+#before {
+  margin-left: 30px;
+  margin-right: 20px;
 }
 
 #command-list {
-  margin-top: 50px;
+  margin-top: 1em;
+  font-weight: lighter;
+  overflow-y: scroll;
+  height: 250px;
+}
+#command-list::-webkit-scrollbar {
+  width: 2px;
+}
+#command-list::-webkit-scrollbar-track {
+  background-color: #333;
+}
+#command-list::-webkit-scrollbar-thumb {
+  background-color: #141412;
+}
+
+#command-list p {
+  margin-bottom: 5px;
+  margin-top: 5px;
+  font-family: "Consolas";
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+#path-find {
+  border: 1px solid #3d8bfd;
+  color: #3d8bfd;
 }
 
 #new-cmd-save {
-  margin-left: 10px;
-  background-color: #333;
-  border: 1px solid #3d8bfd;
-  border-radius: 10%;
-  color: #3d8bfd;
-  font-size: 20px;
-  padding: 5px;
-  cursor: pointer;
+  border: 1px solid green;
+  color: green;
+}
+
+#cmd-item .cmd {
+  color: salmon;
+  font-weight: 600;
+}
+
+#cmd-item .path {
+  color: #727b9e;
 }

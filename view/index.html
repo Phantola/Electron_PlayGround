@@ -11,9 +11,24 @@
     <title>Pandora</title>
   </head>
   <body>
-    <h1>Pandora</h1>
+    <h1 id="title">Pandora</h1>
 
-    <div></div>
+    <div id="new-command">
+      <h3 class="card-title">New Command</h3>
+      <input id="new-cmd" placeholder="Alias" />
+      <span> : </span>
+      <input
+        id="new-path"
+        class="path"
+        placeholder="Your\Program\Path.exe || Command"
+      />
+      <button id="path-find" class="btn">Find</button>
+      <button id="new-cmd-save" class="btn">Save</button>
+    </div>
+
+    <h3>Exist Commands</h3>
+    <div id="command-list"></div>
+
     <script src="./index.js"></script>
   </body>
 </html>
