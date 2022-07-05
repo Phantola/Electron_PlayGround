@@ -2,11 +2,14 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("preLoadedElectronAPI", {
   getCmdList: () => ipcRenderer.invoke("get-cmd-list"),
+  getPreference: () => ipcRenderer.invoke("get-preference"),
 });
 
 window.addEventListener("DOMContentLoaded", () => {
   contextBridge.exposeInMainWorld("electronAPI", {
-    setCloseTray: () => ipcRenderer.on("set-close-tray"),
+    setCloseTrayState: (state) => ipcRenderer.send("set-close-tray", state),
+    setStartWithWindow: (state) =>
+      ipcRenderer.send("set-start-with-window", state),
     openFile: () => ipcRenderer.invoke("dialog:openFile"),
     newCmdSave: (cmd, path) => ipcRenderer.invoke("new-command", cmd, path),
   });

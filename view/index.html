@@ -13,13 +13,29 @@
   <body>
     <h1 id="title">Pandora</h1>
 
+    <div id="general-preference">
+      <h3>General Preference</h3>
+
+      <input type="checkbox" id="close-tray-check" />
+      <label id="close-tray-label" for="close-tray-check"
+        >Minimize to Tray when close</label
+      >
+      <br />
+      <input type="checkbox" id="start-with-window-check" />
+      <label id="start-with-window-label" for="start-with-window-check"
+        >Start with window</label
+      >
+
+      <br />
+    </div>
+
     <div id="new-command">
       <h3 class="card-title">New Command</h3>
-      <input id="new-cmd" placeholder="Alias" />
+      <input id="new-cmd" class="input" placeholder="Alias" />
       <span> : </span>
       <input
         id="new-path"
-        class="path"
+        class="path input"
         placeholder="Your\Program\Path.exe || Command"
       />
       <button id="path-find" class="btn">Find</button>

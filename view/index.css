@@ -6,7 +6,27 @@
     font-family: "NanumSquare";
   }
 }
-input {
+
+#general-preference {
+  margin-bottom: 1em;
+}
+
+#general-preference input {
+  cursor: pointer;
+}
+
+#general-preference label {
+  cursor: pointer;
+  margin-bottom: 1em;
+  font-family: "Consolas";
+  font-weight: lighter;
+  vertical-align: top;
+}
+#new-command {
+  margin-bottom: 1em;
+}
+
+.input {
   width: 150px;
   height: 30px;
   border: none;
@@ -19,7 +39,7 @@ input {
   font-size: 16px;
 }
 
-input:focus {
+.input:focus {
   box-shadow: none;
   outline-offset: 0px;
   outline: none;
@@ -57,7 +77,7 @@ input:focus {
   margin-top: 1em;
   font-weight: lighter;
   overflow-y: scroll;
-  height: 250px;
+  height: 200px;
 }
 #command-list::-webkit-scrollbar {
   width: 2px;

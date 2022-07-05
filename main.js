@@ -20,11 +20,29 @@ let tray = null; //tray
 let commandPopUp = null; //commandInputPopup
 let commandPopUpIsOpened = false;
 
-// true : close action will be stay in tray
-// false :  close action is real quit application
-let closeTrayFlag = true;
-
+let preferenceObj = null; // mapped application preference
 let commandObj = null; // mapped commands object
+
+// 설정파일 로딩 및 생성
+if (preferenceObj == null) {
+  fs.access("preference.json", fs.constants.F_OK, (err) => {
+    if (err) {
+      fs.writeFileSync(
+        "preference.json",
+        JSON.stringify({
+          closeTrayState: true,
+          startWithWindow: false,
+        })
+      );
+      preferenceObj = {
+        closeTrayState: true,
+        startWithWindow: false,
+      };
+    } else {
+      preferenceObj = JSON.parse(fs.readFileSync("preference.json").toString());
+    }
+  });
+}
 
 // 명령어 매핑파일 로딩 및 생성
 if (commandObj == null)
@@ -72,13 +90,14 @@ function createWindow() {
     title: "Pandora",
     icon: "./icon.png",
     alwaysOnTop: false,
-    show: false,
+    show: preferenceObj.startWithWindow,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "./view/preload.js"),
     },
   });
 
+  // 화면 html 파일
   win.loadFile("./view/index.html");
 
   // 다크모드 적용
@@ -99,7 +118,7 @@ function createWindow() {
 
   // 닫기버튼 (x 버튼)
   win.on("close", () => {
-    if (closeTrayFlag) {
+    if (preferenceObj.closeTrayState) {
       win.hide();
     } else {
       app.quit();
@@ -107,9 +126,18 @@ function createWindow() {
   });
 
   // IPC Message Handlers
-  ipcMain.on("set-close-tray", () => {
-    closeTrayFlag = !closeTrayFlag;
+  ipcMain.handle("get-preference", (e) => {
+    return JSON.stringify(preferenceObj);
   });
+  ipcMain.on("set-close-tray", (e, state) => {
+    preferenceObj.closeTrayState = state;
+    savePreference();
+  });
+  ipcMain.on("set-start-with-window", (e, state) => {
+    preferenceObj.startWithWindow = state;
+    savePreference();
+  });
+
   ipcMain.handle("new-command", (e, cmd, path) => {
     return generateNewCommand(cmd, path);
   });
@@ -117,6 +145,11 @@ function createWindow() {
     return commandObj;
   });
   ipcMain.handle("dialog:openFile", handleFileOpen);
+}
+
+// 세팅파일 저장
+function savePreference() {
+  fs.writeFileSync("preference.json", JSON.stringify(preferenceObj));
 }
 
 // 파일 찾기 다이얼로그 오픈
@@ -205,7 +238,7 @@ function generateNewCommand(cmd, path) {
   }
 }
 
-// 프로그램 종료 시 json 파일에 저장
+// 명령어 매핑 json 파일에 저장
 function saveCommands() {
   fs.writeFileSync("command.json", JSON.stringify(commandObj));
 }

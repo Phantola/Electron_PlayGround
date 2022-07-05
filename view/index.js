@@ -1,6 +1,22 @@
-const title = document.getElementById("title");
-title.addEventListener("click", () => {
-  location.href = "index.html";
+// tray-close setting check-box
+const closeTrayCheck = document.getElementById("close-tray-check");
+const startWithWindowCheck = document.getElementById("start-with-window-check");
+
+(async () => {
+  let preference = JSON.parse(
+    await window.preLoadedElectronAPI.getPreference()
+  );
+
+  console.log(preference);
+  closeTrayCheck.checked = preference.closeTrayState;
+  startWithWindowCheck.checked = preference.startWithWindow;
+})();
+
+closeTrayCheck.addEventListener("change", (e) => {
+  window.electronAPI.setCloseTrayState(closeTrayCheck.checked);
+});
+startWithWindowCheck.addEventListener("change", (e) => {
+  window.electronAPI.setStartWithWindow(startWithWindowCheck.checked);
 });
 
 // new command file find dialog
