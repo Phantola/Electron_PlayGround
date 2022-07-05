@@ -24,36 +24,31 @@ let preferenceObj = null; // mapped application preference
 let commandObj = null; // mapped commands object
 
 // 설정파일 로딩 및 생성
-if (preferenceObj == null) {
-  fs.access("preference.json", fs.constants.F_OK, (err) => {
-    if (err) {
-      fs.writeFileSync(
-        "preference.json",
-        JSON.stringify({
-          closeTrayState: true,
-          startWithWindow: false,
-        })
-      );
-      preferenceObj = {
-        closeTrayState: true,
-        startWithWindow: false,
-      };
-    } else {
-      preferenceObj = JSON.parse(fs.readFileSync("preference.json").toString());
-    }
-  });
+try {
+  fs.accessSync("preference.json", fs.constants.F_OK);
+  preferenceObj = JSON.parse(fs.readFileSync("preference.json").toString());
+} catch (err) {
+  preferenceObj = {
+    closeTrayState: true,
+    startWithWindow: false,
+  };
+  fs.writeFileSync(
+    "preference.json",
+    JSON.stringify({
+      closeTrayState: true,
+      startWithWindow: false,
+    })
+  );
 }
 
 // 명령어 매핑파일 로딩 및 생성
-if (commandObj == null)
-  fs.access("command.json", fs.constants.F_OK, (err) => {
-    if (err) {
-      fs.writeFileSync("command.json", JSON.stringify({}));
-      commandObj = {};
-    } else {
-      commandObj = JSON.parse(fs.readFileSync("command.json").toString());
-    }
-  });
+try {
+  fs.accessSync("command.json", fs.constants.F_OK);
+  commandObj = JSON.parse(fs.readFileSync("command.json").toString());
+} catch (err) {
+  commandObj = {};
+  fs.writeFileSync("command.json", JSON.stringify({}));
+}
 
 app.whenReady().then(() => {
   createWindow();
@@ -117,8 +112,9 @@ function createWindow() {
   });
 
   // 닫기버튼 (x 버튼)
-  win.on("close", () => {
+  win.on("close", (e) => {
     if (preferenceObj.closeTrayState) {
+      e.preventDefault();
       win.hide();
     } else {
       app.quit();
@@ -255,24 +251,34 @@ function cmdExecute(cmdString) {
   }
 
   // 콜론 명령어(:)
-  if (cmdString.indexOf(":") > -1) {
-    cmdString = cmdString.split(":");
-    switch (cmdString[0]) {
+  let colonCmd = null;
+  let isColon = false;
+  let colneKeyword = ["text", "txt", "site", "open"];
+  for (let i of colneKeyword) {
+    if (cmdString.startsWith(i)) {
+      isColon = true;
+      colonCmd = i;
+      break;
+    }
+  }
+
+  if (isColon) {
+    cmdString = cmdString.split(colonCmd)[1].slice(1);
+    switch (colonCmd) {
       case "text":
       case "txt": {
-        cp.exec(`notepad ${cmdString[1]}`);
+        cp.exec(`notepad ${cmdString}`);
         return;
       }
       case "site": {
         cp.execFile(
           `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`,
-          [`${cmdString[1]}`]
+          [`${cmdString}`]
         );
-        console.log(cmdString[1]);
         return;
       }
       case "open": {
-        cp.exec(`explorer.exe ${cmdString[1]}`);
+        cp.exec(`explorer.exe ${cmdString}`);
         return;
       }
     }
