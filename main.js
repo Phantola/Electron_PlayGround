@@ -23,7 +23,7 @@ let commandPopUpIsOpened = false;
 let preferenceObj = null; // mapped application preference
 let commandObj = null; // mapped commands object
 
-// 설정파일 로딩 및 생성
+// Load Preference object
 try {
   fs.accessSync("preference.json", fs.constants.F_OK);
   preferenceObj = JSON.parse(fs.readFileSync("preference.json").toString());
@@ -31,17 +31,19 @@ try {
   preferenceObj = {
     closeTrayState: true,
     startWithWindow: false,
+    enableAutoRecommand: true,
   };
   fs.writeFileSync(
     "preference.json",
     JSON.stringify({
       closeTrayState: true,
       startWithWindow: false,
+      enableAutoRecommand: true,
     })
   );
 }
 
-// 명령어 매핑파일 로딩 및 생성
+// Load Mapping command object
 try {
   fs.accessSync("command.json", fs.constants.F_OK);
   commandObj = JSON.parse(fs.readFileSync("command.json").toString());
@@ -51,13 +53,19 @@ try {
 }
 
 app.whenReady().then(() => {
+  // create Main Window
   createWindow();
 
-  // 명령어 입력 팝업 Global shortcut Register
+  // create Tray
+  createTray();
+
+  // create cmd popup with show : false option
+  commandPopUp = createCmdPopUp();
+
+  // command input popup Global shortcut Register
   globalShortcut.register("CommandOrControl+Shift+R", () => {
     if (commandPopUp == null) {
       commandPopUp = createCmdPopUp();
-      //commandPopUp.webContents.openDevTools();
       commandPopUpIsOpened = true;
     } else {
       if (commandPopUpIsOpened) {
@@ -98,9 +106,6 @@ function createWindow() {
   // 다크모드 적용
   nativeTheme.themeSource = "dark";
 
-  // 트레이 생성
-  tray = createTray();
-
   // 최소화하고 작업표시줄에서 다시 눌렀을 때
   win.on("restore", function (e) {
     win.show();
@@ -133,6 +138,14 @@ function createWindow() {
     preferenceObj.startWithWindow = state;
     savePreference();
   });
+  ipcMain.on("set-auto-recommand", (e, state) => {
+    preferenceObj.enableAutoRecommand = state;
+    savePreference();
+
+    if (commandPopUp != null) {
+      commandPopUp.webContents.send("get-auto-recommand", state);
+    }
+  });
 
   ipcMain.handle("new-command", (e, cmd, path) => {
     return generateNewCommand(cmd, path);
@@ -143,41 +156,28 @@ function createWindow() {
   ipcMain.handle("dialog:openFile", handleFileOpen);
 }
 
-// 세팅파일 저장
-function savePreference() {
-  fs.writeFileSync("preference.json", JSON.stringify(preferenceObj));
-}
-
-// 파일 찾기 다이얼로그 오픈
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog();
-  if (canceled) {
-    return;
-  } else {
-    return filePaths[0];
-  }
-}
-
 // 트레이 생성 함수 =================
 function createTray() {
-  let appIcon = new Tray("./assets/icon.png");
+  tray = new Tray("./assets/icon.png");
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "열기",
+      label: "창 열기",
       click: () => {
         win.show();
       },
     },
     {
-      label: "종료",
-      click: () => {
-        saveCommands();
-        app.quit();
-      },
+      label: "Pandora 종료",
+      role: "quit",
     },
   ]);
 
-  appIcon.setContextMenu(contextMenu);
+  tray.setContextMenu(contextMenu);
+
+  // prevent right click window taskbar instead tray icon
+  tray.on("right-click", (e) => {
+    e.preventDefault();
+  });
 }
 
 // 명령어 입력 팝업 생성 ================
@@ -188,12 +188,12 @@ function createCmdPopUp() {
     frame: false,
     transparent: true,
     titleBarStyle: "hidden",
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "./view/cmdPopupPreload.js"),
     },
   });
   cmdPopUp.loadFile("./view/cmdPopup.html");
-  cmdPopUp.webContents.openDevTools();
 
   // esc 로 입력창 닫기
   let menu = new Menu();
@@ -202,7 +202,7 @@ function createCmdPopUp() {
       accelerator: "esc",
       acceleratorWorksWhenHidden: true,
       click: () => {
-        cmdPopUp.hide();
+        commandPopUp.hide();
         commandPopUpIsOpened = false;
       },
     })
@@ -224,6 +224,26 @@ function createCmdPopUp() {
   return cmdPopUp;
 }
 
+// 세팅파일 저장
+function savePreference() {
+  fs.writeFileSync("preference.json", JSON.stringify(preferenceObj));
+}
+
+// 명령어 매핑 json 파일에 저장
+function saveCommands() {
+  fs.writeFileSync("command.json", JSON.stringify(commandObj));
+}
+
+// 파일 찾기 다이얼로그 오픈
+async function handleFileOpen() {
+  const { canceled, filePaths } = await dialog.showOpenDialog();
+  if (canceled) {
+    return;
+  } else {
+    return filePaths[0];
+  }
+}
+
 // 새로운 명령어 등록
 function generateNewCommand(cmd, path) {
   commandObj[cmd] = path;
@@ -232,11 +252,6 @@ function generateNewCommand(cmd, path) {
     saveCommands();
     return true;
   }
-}
-
-// 명령어 매핑 json 파일에 저장
-function saveCommands() {
-  fs.writeFileSync("command.json", JSON.stringify(commandObj));
 }
 
 // 명령어 실행 함수

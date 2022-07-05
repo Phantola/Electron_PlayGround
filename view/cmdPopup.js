@@ -1,5 +1,11 @@
 const cmdInput = document.getElementById("cmd");
 const autoCompBox = document.getElementById("auto-complete");
+let autoCompleteState;
+
+window.preLoadedElectronAPI.getAutoRecommand((_event, state) => {
+  autoCompleteState = state;
+  if (!state) autoCompBox.innerHTML = "";
+});
 
 cmdInput.focus();
 cmdInput.addEventListener("keypress", () => {
@@ -18,10 +24,12 @@ cmdInput.addEventListener("keyup", async function (e) {
   }
 
   // 자동완성
-  let recommand =
-    this.value == ""
-      ? ""
-      : await window.electronAPI.cmdAutoRecommand(this.value);
+  if (autoCompleteState) {
+    let recommand =
+      this.value == ""
+        ? ""
+        : await window.electronAPI.cmdAutoRecommand(this.value);
 
-  autoCompBox.innerHTML = "&nbsp".repeat(this.value.length) + recommand;
+    autoCompBox.innerHTML = "&nbsp".repeat(this.value.length) + recommand;
+  }
 });

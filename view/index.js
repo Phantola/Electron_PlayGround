@@ -1,6 +1,7 @@
 // tray-close setting check-box
 const closeTrayCheck = document.getElementById("close-tray-check");
 const startWithWindowCheck = document.getElementById("start-with-window-check");
+const autoRecommandCheck = document.getElementById("auto-recommand-check");
 
 (async () => {
   let preference = JSON.parse(
@@ -10,6 +11,7 @@ const startWithWindowCheck = document.getElementById("start-with-window-check");
   console.log(preference);
   closeTrayCheck.checked = preference.closeTrayState;
   startWithWindowCheck.checked = preference.startWithWindow;
+  autoRecommandCheck.checked = preference.enableAutoRecommand;
 })();
 
 closeTrayCheck.addEventListener("change", (e) => {
@@ -17,6 +19,9 @@ closeTrayCheck.addEventListener("change", (e) => {
 });
 startWithWindowCheck.addEventListener("change", (e) => {
   window.electronAPI.setStartWithWindow(startWithWindowCheck.checked);
+});
+autoRecommandCheck.addEventListener("change", (e) => {
+  window.electronAPI.setAutoRecommand(autoRecommandCheck.checked);
 });
 
 // new command file find dialog
