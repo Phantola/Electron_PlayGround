@@ -8,9 +8,9 @@ const {
   globalShortcut,
   nativeTheme,
   MenuItem,
+  Notification,
 } = require("electron");
 const path = require("path");
-const axios = require("axios");
 const fs = require("fs");
 const cp = require("child_process");
 
@@ -30,17 +30,10 @@ try {
 } catch (err) {
   preferenceObj = {
     closeTrayState: true,
-    startWithWindow: false,
+    startWithWindow: true,
     enableAutoRecommand: true,
   };
-  fs.writeFileSync(
-    "preference.json",
-    JSON.stringify({
-      closeTrayState: true,
-      startWithWindow: false,
-      enableAutoRecommand: true,
-    })
-  );
+  fs.writeFileSync("preference.json", JSON.stringify(preferenceObj));
 }
 
 // Load Mapping command object
@@ -83,6 +76,11 @@ app.whenReady().then(() => {
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  new Notification({
+    title: "Pandora",
+    body: "Pandora is running!",
+  }).show();
 });
 
 // 메인 윈도우 생성 ==================
@@ -96,12 +94,12 @@ function createWindow() {
     show: preferenceObj.startWithWindow,
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, "./view/preload.js"),
+      preload: path.join(__dirname, "./view/mainWindowPreload.js"),
     },
   });
 
   // 화면 html 파일
-  win.loadFile("./view/index.html");
+  win.loadFile("./view/mainWindow.html");
 
   // 다크모드 적용
   nativeTheme.themeSource = "dark";
@@ -158,7 +156,7 @@ function createWindow() {
 
 // 트레이 생성 함수 =================
 function createTray() {
-  tray = new Tray("./assets/icon.png");
+  tray = new Tray("./assets/icon.ico");
   const contextMenu = Menu.buildFromTemplate([
     {
       label: "창 열기",
@@ -214,6 +212,11 @@ function createCmdPopUp() {
     cmdExecute(cmdString);
     commandPopUp.hide();
     commandPopUpIsOpened = false;
+  });
+
+  // 명령어 자동완성 기능 플래그
+  ipcMain.handle("get-auto-recommand-explicit", () => {
+    return preferenceObj.enableAutoRecommand;
   });
 
   // 명령어 자동완성 핸들러

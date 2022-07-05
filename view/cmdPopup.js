@@ -2,9 +2,15 @@ const cmdInput = document.getElementById("cmd");
 const autoCompBox = document.getElementById("auto-complete");
 let autoCompleteState;
 
+(async () => {
+  autoCompleteState =
+    await window.preLoadedElectronAPI.getAutoRecommandExplicit();
+})();
+
 window.preLoadedElectronAPI.getAutoRecommand((_event, state) => {
   autoCompleteState = state;
   if (!state) autoCompBox.innerHTML = "";
+  console.log(autoCompleteState);
 });
 
 cmdInput.focus();

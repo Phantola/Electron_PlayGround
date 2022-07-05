@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("preLoadedElectronAPI", {
+  getAutoRecommandExplicit: () =>
+    ipcRenderer.invoke("get-auto-recommand-explicit"),
   getAutoRecommand: (callback) =>
     ipcRenderer.on("get-auto-recommand", callback),
   closeCmdPopup: () => ipcRenderer.send("close-cmd-popup"),

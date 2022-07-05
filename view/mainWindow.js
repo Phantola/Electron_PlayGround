@@ -7,8 +7,6 @@ const autoRecommandCheck = document.getElementById("auto-recommand-check");
   let preference = JSON.parse(
     await window.preLoadedElectronAPI.getPreference()
   );
-
-  console.log(preference);
   closeTrayCheck.checked = preference.closeTrayState;
   startWithWindowCheck.checked = preference.startWithWindow;
   autoRecommandCheck.checked = preference.enableAutoRecommand;
