@@ -1,4 +1,4 @@
-# JangLuna's Electron Practice Repo
+# Phantola's Electron Practice Repo
 
 This `README.md` file will be a note for JangLuna's electron study.
 
