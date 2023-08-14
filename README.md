@@ -1,6 +1,6 @@
 # Phantola's Electron Practice Repo
 
-This `README.md` file will be a note for JangLuna's electron study.
+This `README.md` file will be a note for Phantola's electron study.
 
 ## [1. Start settings](https://electronjs.org/docs/latest/tutorial/quick-start)
 
